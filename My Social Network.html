@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Social Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: rgb(250, 243, 233);
+        }
+
+        .main {
+            display: flex;
+            flex: 1;
+            padding: 15px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background-color: rgb(46, 89, 158);
+            color: white;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .main {
+            display: flex;
+        }
+
+        .leftsection {
+            padding: 15px;
+            height: fit-content;
+            width: 300px;
+            background-color: rgb(255, 255, 255);
+            line-height: 1.8;
+            border-radius: 20px;
+        }
+
+        .rightsection {
+            border-radius: 20px;
+            padding: 15px;
+            background-color: white;
+            display: inline-block;
+            flex: 1;
+            height: fit-content;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: rgb(46, 89, 158);
+            color: white;
+            height: 30px;
+            width: 80px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3 ease;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        img,video {
+            max-width: 50%;
+            border-radius: 6px;
+        }
+
+        .notification {
+            background: #e7f3ff;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .comment {
+            font-size: 25px;
+            margin-left: 10px;
+        }
+
+        #butt {
+            width: 150px;
+        }
+
+        .button:hover{
+            background-color:darkblue;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <img src="c:\Users\MS\Pictures\Screenshots\picture.png">
+        <h1>My Social Platform</h1>
+    </header>
+    <div class="main">
+        <div class="leftsection">
+            <div class="card">
+                <h4>User Profile</h4>
+                <p><b>Name:</b>Nimra Ashraf</p>
+                <h4>Privay:</h4>
+                <select name="option" id="Privay">
+                    <option value="1">Public</option>
+                    <option value="2">Private</option>
+                    <option value="3">Friends Only</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h4>Friend Requests</h4>
+                <h5>Shanzay</h5>
+                <button onclick="acceptRequest()" class="button">Accept</button>
+            </div>
+
+            <div class="card">
+                <h4 id="notifybox">Notifications</h4>
+            </div>
+        </div>
+
+        <div class="rightsection">
+            <div class="card">
+                <h3>Create Post</h3>
+                <label for="text">
+                    <textarea name="text" id="textbox" placeholder="What's in your mind?"></textarea>
+                </label>
+                <input type="file" id="media" accept=".pdf,.doc,.docx,.ppt,.pptx" required>
+                <button onclick="createPost()" class="button">Post</button>
+            </div>
+            <div id="post"></div>
+        </div>
+    </div>
+    <script> 
+        const socket = {
+            send: (msg) => {
+                console.log("WebSocket message:", msg);
+            }
+        };
+        
+        function notify(text) {
+            let notifyBox = document.getElementById("notifyBox");
+
+            if (!notifyBox) {
+                notifyBox = document.createElement("div");
+                notifyBox.id = "notifyBox";
+                document.querySelector(".leftsection").appendChild(notifyBox);
+            }
+            const n = document.createElement("div");
+            n.innerText = text;
+            n.style.background = "#eee";
+            n.style.padding = "5px";
+            n.style.margin = "5px 0";
+            notifyBox.prepend(n);
+        }
+
+        function acceptRequest() {
+            notify("You accepted Shanzay's friend request");
+        }
+
+        function createPost() {
+            const text = document.getElementById("textbox").value;
+            const file = document.getElementById("media").files[0];
+
+            if (text.trim() === "" && !file) {
+                alert("Post cannot be empty!");
+                return;
+            }
+
+            const post = document.createElement("div");
+            post.style.border = "1px solid #ccc";
+            post.style.padding = "10px";
+            post.style.marginBottom = "10px";
+
+            post.innerHTML = `
+
+        <p><b>Nimra Ashraf</b></p>
+        <br>
+        <p>${text}</p>
+        <div class="media"></div>
+        <button class="button" onclick="likePost(this)">👍 Like</button>
+        <button class="button" id="butt" onclick="showComment(this)">💬 Comment</button>
+        <span class="likes">0 Likes</span>
+        <div class="comments"></div>
+        <input placeholder="Write a comment..." onkeypress="addComment(event, this)">
+        
+    `;
+            if (file) {
+                const mediaDiv = post.querySelector(".media");
+                const url = URL.createObjectURL(file);
+
+                if (file.type.startsWith("image")) {
+                    mediaDiv.innerHTML = `<img src="${url}" width="100%">`;
+                } else if (file.type.startsWith("video")) {
+                    mediaDiv.innerHTML = `<video src="${url}" controls width="100%"></video>`;
+                }else {
+                    mediaDiv.innerHTML = `<div class="document-post">📄 <strong>${file.name}</strong><br>
+                <a href="${url}" target="_blank">View / Download</a></div>`;
+                }
+            }
+            document.getElementById("post").prepend(post);
+            document.getElementById("textbox").value = "";
+            document.getElementById("media").value = "";
+            notify("Your post was published");
+        }
+
+        function likePost(btn) {
+            const likesSpan = btn.nextElementSibling.nextElementSibling;
+            let count = parseInt(likesSpan.innerText);
+            likesSpan.innerText = (count + 1) + " Likes";
+            notify("Someone liked your post");
+        }
+
+        function showComment(btn) {
+            btn.nextElementSibling.style.display = "block";
+        }
+
+        function addComment(e, input) {
+            if (e.key === "Enter") {
+                const commentDiv = document.createElement("div");
+                commentDiv.className = "comment";
+                commentDiv.innerText = input.value;
+                input.previousElementSibling.appendChild(commentDiv);
+                input.value = "";
+                notify("New comment added");
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
