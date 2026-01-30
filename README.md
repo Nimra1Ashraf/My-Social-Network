@@ -19,4 +19,6 @@ Users can connect, share posts, and interact in a clean and user-friendly interf
 - CSS
 - JavaScript
 
-- Author: Nimra Ashraf
+## Author
+
+Nimra Ashraf
